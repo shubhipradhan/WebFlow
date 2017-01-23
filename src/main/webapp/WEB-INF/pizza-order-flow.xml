@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow xmlns="http://www.springframework.org/schema/webflow"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.springframework.org/schema/webflow
+                          http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
+
+	<on-start>
+		<evaluate expression="pizzaOrderController.createOrder()" result="flowScope.order"/>
+	</on-start>
+	
+	<!-- Setup Web Flow here -->
+    <view-state id="customerDetails" model="order">
+        <transition on="next" to="selectPizza">
+        	<evaluate expression="pizzaOrderController.validateCust(flowScope.order, messageContext)"/>        	
+			<evaluate expression="pizzaOrderController.initPizzaList()" result="flowScope.pizzaList"/>
+		</transition>
+        <transition on="cancel" to="cancelOrder" />
+    </view-state>
+    
+     <view-state id="selectPizza" model="viewScope.newpizza">
+     	<on-render>
+     		<evaluate expression="pizzaOrderController.createPizza()" result="viewScope.newpizza"/>
+     	</on-render>
+     	<transition on="previous" to="customerDetails" />
+     	<transition on="next" to="complementaryDrinks" />
+        <transition on="add" to="selectPizza">        	       	
+        	<evaluate expression="pizzaOrderController.addPizza(flowScope.order,viewScope.newpizza)"/>
+        </transition>
+        <transition on="clear" to="selectPizza">
+        	<evaluate expression="pizzaOrderController.clearPizzas(flowScope.order)"/>
+        </transition>
+        <transition on="cancel" to="cancelOrder" />
+    </view-state>
+    
+    <action-state id="complementaryDrinks">
+        <evaluate expression="pizzaOrderController.hasComplementaryDrinks(flowScope.order)" />
+        <transition on="yes" to="showDrink" />
+        <transition on="no" to="reviewOrder" />
+    </action-state>
+
+    
+    
+    <view-state id="showDrink">
+    	<transition on="previous" to="selectPizza" />
+        <transition on="next" to="reviewOrder" />
+        <transition on="cancel" to="cancelOrder" />
+    </view-state>
+    
+    <view-state id="reviewOrder" model="order">
+    		
+    	<transition on="previous" to="selectPizza" />
+        <transition on="next" to="orderConfirmation" >
+        	<evaluate expression="pizzaOrderController.submitOrder(flowScope.order)" />
+        </transition>
+        <transition on="cancel" to="cancelOrder" />
+    </view-state>
+    
+     <end-state id="orderConfirmation"  view="orderConfirmation"/>
+
+    <end-state id="cancelOrder"  view="cancelOrder"/>
+    
+	
+</flow>
